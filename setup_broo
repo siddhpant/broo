@@ -1,0 +1,264 @@
+#!/bin/bash
+
+##############################################################################
+
+# This setup script must be run before running Broo the first time.
+# Copyright (C) 2021  Siddh Raman Pant
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# The online repository can be found at <https://github.com/siddhpant/broo>
+# (as of November 13, 2021).
+
+##############################################################################
+
+
+# Exit on errors.
+set -euo pipefail
+
+
+install_dependencies() {
+    # Installs all the required dependencies.
+
+    if [[ -z $(which apt) ]]; then
+        echo "No apt found."
+        read  -n1 -p "Have you installed all the dependencies? (y/n): " yn
+        case $yn in
+            y|Y)
+                echo "Cool! Going ahead."
+                return
+                ;;
+            n|N)
+                echo "Then install them! Look at the README of repo."
+                return 1
+                ;;
+            *)
+                echo "Huh?? Look at the README of repo."
+                echo "Assuming you didn't, as you can't even reply properly."
+                return 1
+                ;;
+        esac
+    fi
+
+    mumble=false
+    dep_installed=false
+
+    if [[ ! -z $(which mumble) ]]; then
+        # Mumble found
+        mumble=true
+    else
+        echo -e "Mumble not found in the system.\n"
+
+        echo -e "If you want, I can build it from source for you." \
+                "\nOtherwise I will go the normal package manager route." \
+                "\nGiving this option because upstream has improved support" \
+                "\nfor PipeWire, performance, and bug fixes." \
+                "\nI will also install the required dependencies." \
+                "\nThis is not a recommended option.\n"
+        read -n1 -p "Do you want to build Mumble from source? (y/n): " yn
+        echo
+        case $yn in
+            y|Y)
+                echo -e "\nEntering...\n"
+                (
+                    set -x
+
+                    cd /tmp/mumble/build
+                    git clone https://github.com/mumble-voip/mumble.git
+                    cd mumble
+
+                    git submodule update --init --recursive
+                    mkdir build && cd build
+
+                    sudo apt install -y \
+                        build-essential \
+                        cmake \
+                        pkg-config \
+                        libqt5texttospeech5-dev \
+                        qttools5-dev \
+                        qttools5-dev-tools \
+                        libqt5svg5-dev \
+                        libboost-dev \
+                        libssl-dev \
+                        libprotobuf-dev \
+                        protobuf-compiler \
+                        libprotoc-dev \
+                        libcap-dev \
+                        libxi-dev \
+                        libasound2-dev \
+                        libogg-dev \
+                        libsndfile1-dev \
+                        libspeechd-dev \
+                        libavahi-compat-libdnssd-dev \
+                        libzeroc-ice-dev \
+                        libpoco-dev \
+                        g++-multilib \
+                        avahi-daemon
+
+                    export CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)
+
+                    release_id=$(python "../scripts/mumble-version.py")
+                    version="$(echo $release_id | cut -d "~" -f 1).0"
+
+                    cmake \
+                        -DBUILD_NUMBER=0 \
+                        -DRELEASE_ID=$release_id \
+                        -DCMAKE_UNITY_BUILD=ON \
+                        -Dalsa=OFF \
+                        -Dcrash-report=OFF \
+                        -Doptimize=ON \
+                        -Dpackaging=ON \
+                        -Dplugins=OFF \
+                        -Dqtspeech=ON \
+                        -Dtranslations=OFF \
+                        -Dwasapi=OFF \
+                        -Dxboxinput=OFF \
+                        ..
+
+                    echo "Mumble (built from source)" > description-pak
+
+                    sudo checkinstall \
+                        --install=yes \
+                        --showinstall=no \
+                        --pkgname=mumble \
+                        --pkgversion=$version \
+                        --pkgrelease=$release_id \
+                        --nodoc
+                )
+
+                echo -e "\nDone!"
+
+                mumble=true
+                dep_installed=true
+                ;;
+
+            n|N)
+                echo -e "Okay, not building Mumble from source.\n"
+                ;;
+
+            *)
+                echo -e "Huh?? Defaulting to not building.\n" ;;
+        esac
+    fi
+
+    if ! $dep_installed; then
+        read -n1 -p "Do you want to install dependencies? (y/n): " yn
+        echo
+        case $yn in
+            y|Y)
+                packages="avahi-daemon"
+
+                if ! $mumble; then
+                    packages="avahi-daemon mumble mumble-server"
+                fi
+
+                (
+                    set -x
+                    sudo apt install -y $packages
+                    sudo systemctl disable mumble-server
+                )
+                ;;
+
+            n|N)
+                echo "Okay. Assuming you have installed all the dependencies!"
+                ;;
+
+            *)
+                echo "Huh?? Assuming you have installed all the dependencies."
+                ;;
+        esac
+    fi
+}  # End of install_dependencies()
+
+
+set_up_mumble() {
+    # Sets up Mumble for quick use later.
+
+    # Purge any existing cache.
+    if [[ -e ~/.cache/broo ]]; then
+        rm -rf ~/.cache/broo
+    fi
+
+    # Create config folder or purge any existing one.
+    if [[ -e ~/.config/broo ]]; then
+        rm -rf ~/.config/broo/*
+    else
+        mkdir ~/.config/broo
+    fi
+
+    # Set password for new / unregistered connections.
+    pass=
+    echo
+    read -n1 -p "Do you want to set password for new connections? (y/n): " yn
+    echo
+    case $yn in
+        y|Y) read -p "Enter password (NB: saved unencrypted): " pass; echo ;;
+        n|N) ;;
+        *) echo "Huh?? Defaulting to no password." ;;
+    esac
+
+    # Ask if logging is needed.
+    logfile=
+    read -n1 -p "Do you want to enable Mumble logging? (y/n): " yn
+    echo
+    case $yn in
+        y|Y) echo "Log will be stored in ~/.cache/broo/murmur.log"
+             mkdir ~/.cache/broo
+             logfile=~/.cache/broo/murmur.log
+             ;;
+        n|N) ;;
+        *) echo "Huh?? Defaulting to no logging." ;;
+    esac
+
+    # Create the murmur.ini file.
+    echo "Assuming your UID won't change in future."
+    {
+        echo "; Generated by Broo, for Broo! ;-)"
+        echo "bonjour=true"
+        echo "bandwidth=558000" # Max possible BW, see Mumble source on GitHub.
+        echo "database=$HOME/.config/broo/murmur.sqlite"
+        echo "logfile=$logfile"
+        echo "logdays=-1"  # Don't log in database.
+        echo "password=$pass"
+        echo "welcometext="  # Why even welcome ourselves? :-P
+    } > ~/.config/broo/murmur.ini
+
+    echo
+
+    # Tell user to use the Mumble GUI for configuring and setting low latency.
+    echo "Gotta configure Mumble client for getting that sweet low latency."
+    echo "Starting Mumble. Please go through the setup wizard appropriately."
+    echo "Then, go to the settings to adjust quality, latency, and customise."
+    echo "If you have a mic, mute it in Mumble (else it will eat bandwidth)."
+    echo "After you are done, close Mumble and come back here!"
+    mumble >/dev/null 2>&1
+}  # End of set_up_mumble()
+
+
+copy_broo() {
+    sudo cp broo /usr/local/bin
+    sudo chmod a+x /usr/local/bin/broo
+}
+
+
+# Script will start executing from here when run from terminal.
+
+echo -e "Setting up Broo...\n"
+install_dependencies
+set_up_mumble
+copy_broo
+echo -e "\nYay, we are done setting up!"
+
+
+# End of file.

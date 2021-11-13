@@ -1,0 +1,231 @@
+#!/bin/bash
+
+##############################################################################
+
+# Broo is a bash script that connects your phone as microphone wirelessly.
+# Copyright (C) 2021  Siddh Raman Pant
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# The online repository can be found at <https://github.com/siddhpant/broo>
+# (as of November 13, 2021).
+
+##############################################################################
+
+
+# Exit on errors.
+set -euo pipefail
+
+# Folder to store our ephermal files.
+VAR_RUN="/var/run/user/$UID/broo"
+
+
+start_mumble_server() {
+    # Starts the Mumble server.
+    # The PID is saved automatically due to the config in ini file.
+
+    if [[ ! -z $(which mumble-server) ]]; then
+        nohup mumble-server -ini ~/.config/broo/murmur.ini &>/dev/null 2>&1 &
+    else
+        nohup murmurd -ini ~/.config/broo/murmur.ini &>/dev/null 2>&1 &
+    fi
+
+    echo $! > "$VAR_RUN/murmur.pid"
+
+    sleep 3  # Give time for it to set up.
+}  # End of start_mumble_server ()
+
+
+stop_mumble_server() {
+    # Stops the Mumble server, and deletes the PID file if it remains.
+
+    echo -n "."
+    kill $(<"$VAR_RUN/murmur.pid")
+    rm "$VAR_RUN/murmur.pid"
+}  # End of stop_mumble_server()
+
+
+start_mumble_client () {
+    # Starts the Mumble client, stores its PID, and waits till connection.
+
+    echo -e "A window should appear in a moment. Please connect ASAP.\n"
+
+    # Start the client with logs for monitoring, and save PID.
+    nohup mumble "mumble://localhost" &>"$VAR_RUN/nohup.out" &
+    echo $! > "$VAR_RUN/mumble_client.pid"
+
+    # Wait till the user connects (presses OK).
+    # Thanks to 00prometheus on <https://superuser.com/a/900134>.
+    (tail -f "$VAR_RUN/nohup.out" &) | grep --line-buffered -q "ServerHandler:"
+}  # End of start_mumble_client ()
+
+
+stop_mumble_client() {
+    # Stops the Mumble client, and deletes the PID file.
+
+    echo -n "."
+    kill $(<"$VAR_RUN/mumble_client.pid")
+    rm "$VAR_RUN/mumble_client.pid"
+    rm "$VAR_RUN/nohup.out"
+}  # End of stop_mumble_client()
+
+
+get_mumble_sink_input_index() {
+    # Returns / echo's the sink input number/index of Mumble client.
+
+    mumble_sink_index=
+    prop="application.process.id = \"$(<"$VAR_RUN/mumble-client.pid")\""
+
+    # Loop over pactl output to get the sink index of Mumble.
+    while IFS= read -r line ; do
+        if [[ ${line:0:12} == "Sink Input #" ]]; then
+            mumble_sink_index="${line:12}"
+        elif [[ ${line:2} == $prop ]]; then
+            break
+        fi
+    done <<< $(pactl list sink-inputs)
+
+    echo $mumble_sink_index
+}  # End of get_mumble_sink_input_index()
+
+
+configure_sink() {
+    # Configures the Broo sink created for further use.
+
+    # Suppress the output volume to speakers, otherwise we will hear ourselves.
+    pactl set-sink-volume Broo 0
+
+    # Set Broo as default source.
+    pactl set-default-source Broo
+
+    # Move Mumble to Broo sink. For that, we need Mumble sink-input index.
+    pactl move-sink-input $(get_mumble_sink_input_index) Broo
+
+    echo -e "Done! Use \"Monitor of Broo\" as your input mic, and enjoy!\n"
+}  # End of configure_sink()
+
+
+add_mic_pipewire() {
+    # Creates a virtual mic by creating a PipeWire loopback, and saves its PID.
+
+    nohup pw-loopback \
+    --capture-props='media.class=Audio/Sink
+                     node.name=Broo node.description=Broo' &>/dev/null 2>&1 &
+
+    echo $! > "$VAR_RUN/pw_loopback.pid"
+    sleep 3  # Give time for it to set up.
+}  # End of add_mic_pipewire()
+
+
+remove_mic_pipewire() {
+    # Removes the PipeWire loopback, and deletes the PID file.
+
+    echo -n "."
+    kill $(<"$VAR_RUN/pw_loopback.pid")
+    rm "$VAR_RUN/pw_loopback.pid"
+}  # End of remove_mic_pipewire()
+
+
+add_mic_pulseaudio() {
+    # Loads a sink using pactl, and saves the index returned.
+
+    # Add sink and save the index it returns.
+    pa_index=$(pactl load-module module-null-sink \
+                     sink_name="Broo" \
+                     sink_properties=device.description="Broo")
+
+    echo $pa_index > "$VAR_RUN/pa_sink.index"
+    sleep 3  # Give time for it to set up.
+
+    # Restore ALSA settings if the backup file exists.
+    if [ -f ~/.config/asound.state ]; then
+        alsactl --file ~/.config/asound.state restore
+    fi
+}  # End of add_mic_pulseaudio()
+
+
+remove_mic_pulseaudio() {
+    # Unloads the PulseAudio sink, and deletes the index file.
+
+    echo -n "."
+    pactl unload-module $(<"$VAR_RUN/pa_sink.index")
+    rm "$VAR_RUN/pa_sink.index"
+}  # End of remove_mic_pulseaudio()
+
+
+
+start_broo() {
+    # Starts Broo with its required things.
+
+    if [ -d $VAR_RUN ]; then
+        echo "Broo was already started earlier."
+        echo "To force start, use 'f' on the starting prompt."
+        return 1
+    fi
+
+    mkdir $VAR_RUN
+
+    echo -e "Initialising Broo...\n"
+
+    start_mumble_server
+    start_mumble_client
+
+    # Check if PipeWire used ("PipeWire" will be a substring in output).
+    if [[ $(pactl info | grep "^Server Name") =~ "PipeWire" ]]; then
+        add_mic_pipewire
+    else
+        add_mic_pulseaudio
+    fi
+
+    configure_sink
+
+    echo "Connect to Broo's server on $(hostname -I | head -n 1) :)"
+    echo "If you are on mobile, use the Mumla (Android) or Mumble (iOS) app."
+}  # End of start_broo()
+
+
+stop_broo() {
+    # Terminates Broo with its required things.
+
+    echo -n "Terminating Broo"
+
+    if [[ $(pactl info | grep "^Server Name") =~ "PipeWire" ]]; then
+        remove_mic_pipewire
+    else
+        remove_mic_pulseaudio
+    fi
+
+    stop_mumble_client
+    stop_mumble_server
+
+    rmdir $VAR_RUN
+
+    echo -e "\nTerminated."
+}  # End of stop_broo()
+
+
+# Script will start executing from here when run from terminal.
+
+read -n1 -p "Do you want to start Broo, or close it? (s/c): " todo
+echo -e "\n"
+
+case $todo in
+    f|F) rm -rf $VAR_RUN ;&  # Fallthrough to the next case.
+    s|S) start_broo ;;
+    c|C) stop_broo ;;
+    *) echo "Shoo away your cat from the keyboard man!" ;;
+esac
+
+
+# End of file.
