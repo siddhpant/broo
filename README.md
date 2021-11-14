@@ -33,7 +33,7 @@ Install the following:
 - `murmur` or `mumble-server`
 - `avahi` or `avahi-daemon`
 
-If you want, you may build Mumble and its server directly from the [source](https://github.com/mumble-voip/mumble) to get improved PipeWire support, performance, and bug fixes. Compilation doesn't take much take and completes under a few minutes. You may [want to build a package](https://github.com/mumble-voip/mumble/issues/5302#issuecomment-967989830) instead of directly going the `sudo make install` route.
+If you want, you may build Mumble and its server directly from the [source](https://github.com/mumble-voip/mumble) to get improved PipeWire support, performance, and bug fixes. Compilation doesn't take much time and completes under a few minutes. Though, you may [want to build a package](https://github.com/mumble-voip/mumble/issues/5302#issuecomment-967989830) instead of directly going the `sudo make install` route.
 
 ## Installation
 

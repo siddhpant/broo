@@ -27,7 +27,7 @@
 # Exit on errors.
 set -euo pipefail
 
-# Folder to store our ephermal files.
+# Folder to store our ephemeral files containing PIDs etc.
 VAR_RUN="/var/run/user/$UID/broo"
 
 
