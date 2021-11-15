@@ -85,7 +85,7 @@ get_mumble_sink_input_index() {
     # Returns / echo's the sink input number/index of Mumble client.
 
     mumble_sink_index=
-    prop="application.process.id = \"$(<"$VAR_RUN/mumble-client.pid")\""
+    prop="application.process.id = \"$(<"$VAR_RUN/mumble_client.pid")\""
 
     # Loop over pactl output to get the sink index of Mumble.
     while IFS= read -r line ; do
