@@ -57,6 +57,19 @@ Do you want to start Broo, or close it? (s/c):
 - Use the mic by choosing `Monitor of Broo` as your input source / mic in applications.
 - The script will reside in `/usr/local/bin`, so you can run Broo from anywhere.
 
+## Audiophile?
+
+Then you can eliminate the WiFi latency by connecting your phone to your computer with a wire.
+
+Use `USB tethering` to share your smartphone's active internet connection with your computer. When Broo creates a local server, due to direct connection with the phone the WiFi latency will be bypassed, and you can observe Mumla showing 0ms latency before connecting.
+
+This will reduce the total audio latency by a significant percentage. For example, you might reduce the latency by 5-15ms, but the gain can be more or less since it depends on your connection.
+
+The network latency to the web servers of services such as Teams, Google Meet, Discord, etc. is usually higher, so in the grand scheme of things, this optimisation might not matter for the average user.
+
+Further, this may come in handy when your WiFi adapter / card / driver is borked.
+
+
 ## Credits
 
 Inspired by the implementation of https://github.com/pzmarzly/mic_over_mumble/.
