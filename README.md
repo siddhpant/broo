@@ -3,7 +3,7 @@
  [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
  
 - Connect your phone as microphone wirelessly.
-- Get clear voice and low latency (around 30ms on average).
+- Get clear voice and low latency with minimal CPU overhead.
 - Just run one command (`$ broo`) to quickly set-up the mic and start talking with peers.
 - Supports both modern PipeWire and legacy PulseAudio.
 - For PulseAudio use case, restores backed-up ALSA settings stored in `~/.config/asound.state`, if it exists.
@@ -63,12 +63,15 @@ Then you can eliminate the WiFi latency by connecting your phone to your compute
 
 Use `USB tethering` to share your smartphone's active internet connection with your computer. When Broo creates a local server, due to direct connection with the phone the WiFi latency will be bypassed, and you can observe Mumla showing 0ms latency before connecting.
 
-This will reduce the total audio latency by a significant percentage. For example, you might reduce the latency by 5-15ms, but the gain can be more or less since it depends on your connection.
+This will reduce the total audio latency by a significant percentage. For example, you might reduce the latency by 15ms, but the gain can be more or less since it depends on your connection.
 
 The network latency to the web servers of services such as Teams, Google Meet, Discord, etc. is usually higher, so in the grand scheme of things, this optimisation might not matter for the average user.
 
 Further, this may come in handy when your WiFi adapter / card / driver is borked.
 
+## Miscellaneous
+
+If you see that your PC's user isn't in the channel when you join from your mobile, then run `setup_broo` again and accept the certificate. It would be nice to go through the steps again.
 
 ## Credits
 

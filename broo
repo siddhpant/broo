@@ -59,10 +59,9 @@ stop_mumble_server() {
 start_mumble_client () {
     # Starts the Mumble client, stores its PID, and waits till connection.
 
-    echo -e "A window should appear in a moment. Please connect ASAP.\n"
-
     # Start the client with logs for monitoring, and save PID.
-    nohup mumble "mumble://localhost" &>"$VAR_RUN/nohup.out" &
+    nohup mumble "mumble://127.0.0.1" -platform offscreen \
+        &>"$VAR_RUN/nohup.out" &
     echo $! > "$VAR_RUN/mumble_client.pid"
 
     # Wait till the user connects (presses OK).
@@ -191,12 +190,33 @@ start_broo() {
     configure_sink
 
     echo "Connect to Broo's server on $(hostname -I | head -n 1) :)"
-    echo "If you are on mobile, use the Mumla (Android) or Mumble (iOS) app."
 }  # End of start_broo()
+
+
+force_kill_broo() {
+    # Force kill Broo by killing processes and deleting $VAR_RUN folder.
+
+    rm -rf $VAR_RUN
+    pkill mumble || true
+    pkill mumble-server || true
+    pkill murmurd || true
+
+    if [[ $(pactl info | grep "^Server Name") =~ "PipeWire" ]]; then
+        pkill pw-loopback || true
+    else
+        pulseaudio -k || true
+    fi
+}  # End of force_kill_broo()
 
 
 stop_broo() {
     # Terminates Broo with its required things.
+
+    if [ ! -d $VAR_RUN ]; then
+        echo "Broo has already stopped."
+        echo "To force stop, use 'q' on the starting prompt."
+        return 1
+    fi
 
     echo -n "Terminating Broo"
 
@@ -221,9 +241,10 @@ read -n1 -p "Do you want to start Broo, or close it? (s/c): " todo
 echo -e "\n"
 
 case $todo in
-    f|F) rm -rf $VAR_RUN ;&  # Fallthrough to the next case.
+    f|F) force_kill_broo ;&  # Fallthrough to the next case.
     s|S) start_broo ;;
     c|C) stop_broo ;;
+    q|Q) force_kill_broo; echo "Force killed the requisite processes." ;;
     *) echo "Shoo away your cat from the keyboard man!" ;;
 esac
 
