@@ -32,6 +32,7 @@ Install the following:
 - `mumble`
 - `murmur` or `mumble-server`
 - `avahi` or `avahi-daemon`
+- `iproute2`
 
 If you want, you may build Mumble and its server directly from the [source](https://github.com/mumble-voip/mumble) to get improved PipeWire support, performance, and bug fixes. Compilation doesn't take much time and completes under a few minutes. Though, you may [want to build a package](https://github.com/mumble-voip/mumble/issues/5302#issuecomment-967989830) instead of directly going the `sudo make install` route.
 
@@ -71,7 +72,9 @@ Further, this may come in handy when your WiFi adapter / card / driver is borked
 
 ## Miscellaneous
 
-If you see that your PC's user isn't in the channel when you join from your mobile, then run `setup_broo` again and accept the certificate. It would be nice to go through the steps again.
+If you see that your PC's user isn't in the channel when you join from your mobile, then restart Broo and press `p` on the starting prompt of Broo. After following the on-screen steps, run Broo normally.
+
+If the problem still persists, it would be nice to go through the setup again.
 
 ## Credits
 

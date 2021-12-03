@@ -18,8 +18,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# The online repository can be found at <https://github.com/siddhpant/broo>
-# (as of November 13, 2021).
+# The online repository can be found at <https://github.com/siddhpant/broo>.
 
 ##############################################################################
 
@@ -104,7 +103,8 @@ install_dependencies() {
                         libzeroc-ice-dev \
                         libpoco-dev \
                         g++-multilib \
-                        avahi-daemon
+                        avahi-daemon \
+                        iproute2
 
                     export CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)
 
@@ -161,10 +161,10 @@ install_dependencies() {
         echo
         case $yn in
             y|Y)
-                packages="avahi-daemon"
+                packages="avahi-daemon iproute2"
 
                 if ! $mumble; then
-                    packages="avahi-daemon mumble mumble-server"
+                    packages+=" mumble mumble-server"
                 fi
 
                 (

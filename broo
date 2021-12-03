@@ -18,8 +18,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# The online repository can be found at <https://github.com/siddhpant/broo>
-# (as of November 13, 2021).
+# The online repository can be found at <https://github.com/siddhpant/broo>.
 
 ##############################################################################
 
@@ -163,16 +162,21 @@ remove_mic_pulseaudio() {
 }  # End of remove_mic_pulseaudio()
 
 
-
-start_broo() {
-    # Starts Broo with its required things.
+check_if_started() {
+    # Check if the fodler already exists.
 
     if [ -d $VAR_RUN ]; then
         echo "Broo was already started earlier."
         echo "To force start, use 'f' on the starting prompt."
         return 1
     fi
+}  # End of check_if_started()
 
+
+start_broo() {
+    # Starts Broo with its required things.
+
+    check_if_started
     mkdir $VAR_RUN
 
     echo -e "Initialising Broo...\n"
@@ -189,8 +193,36 @@ start_broo() {
 
     configure_sink
 
-    echo "Connect to Broo's server on $(hostname -I | head -n 1) :)"
+    server_ip=$(ip -4 a | grep "state UP" -A1 |
+                awk 'NR!=1 {print $2}' | cut -d '/' -f1)
+
+    echo "Connect to Broo's server on $server_ip :)"
 }  # End of start_broo()
+
+
+fix_certificate_problem() {
+    # Sometimes the client doesn't connect to server because of certificate.
+    # We will open Mumble GUI to make the user accept it to fix the problem.
+
+    check_if_started
+    mkdir $VAR_RUN
+
+    echo -e "
+        A Mumble window will open. After that, do the following:
+        - Connect to the server, and accept the certificate.
+        - Close and exit Mumble.
+    " | awk '{$1=$1};1'
+
+    read -n1 -sp "Press any key to proceed and open Mumble..."
+
+    start_mumble_server
+    mumble "mumble://127.0.0.1" >/dev/null 2>&1
+    stop_mumble_server
+
+    rmdir $VAR_RUN
+
+    echo -e "\rDone! Broo will hopefully work without hiccups now!"
+}  # End of fix_certificate_problem()
 
 
 force_kill_broo() {
@@ -245,6 +277,7 @@ case $todo in
     s|S) start_broo ;;
     c|C) stop_broo ;;
     q|Q) force_kill_broo; echo "Force killed the requisite processes." ;;
+    p|P) fix_certificate_problem ;;
     *) echo "Shoo away your cat from the keyboard man!" ;;
 esac
 
