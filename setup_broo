@@ -282,8 +282,14 @@ set_up_mumble() {
 
 copy_broo() {
     echo "Setting up the 'broo' command..."
-    sudo cp broo /usr/local/bin
-    sudo chmod a+x /usr/local/bin/broo
+
+    mkdir -p $HOME/.local/bin
+    cp broo $HOME/.local/bin
+    chmod a+x $HOME/.local/bin/broo
+
+    if [[ ! ":$PATH:" == *"$HOME/.local/bin:"* ]]; then
+        echo "Please add ~/.local/bin to your path before running Broo!"
+    fi
 }
 
 
