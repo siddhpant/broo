@@ -262,9 +262,9 @@ set_up_mumble() {
 
     # Start the server.
     if [[ ! -z $(which mumble-server) ]]; then
-        nohup mumble-server -ini ~/.config/broo/murmur.ini &>/dev/null 2>&1 &
+        nohup pw-jack mumble-server -ini ~/.config/broo/murmur.ini &>/dev/null 2>&1 &
     else
-        nohup murmurd -ini ~/.config/broo/murmur.ini &>/dev/null 2>&1 &
+        nohup pw-jack murmurd -ini ~/.config/broo/murmur.ini &>/dev/null 2>&1 &
     fi
 
     murmur_pid=$!
