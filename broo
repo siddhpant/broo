@@ -38,7 +38,7 @@ start_mumble_server() {
         nohup pw-jack mumble-server -ini ~/.config/broo/murmur.ini &>/dev/null 2>&1 &
     else
         nohup pw-jack murmurd -ini ~/.config/broo/murmur.ini &>/dev/null 2>&1 &
-    fi
+    fi &> /dev/null
 
     echo $! > "$VAR_RUN/murmur.pid"
 

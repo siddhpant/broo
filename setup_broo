@@ -265,7 +265,7 @@ set_up_mumble() {
         nohup pw-jack mumble-server -ini ~/.config/broo/murmur.ini &>/dev/null 2>&1 &
     else
         nohup pw-jack murmurd -ini ~/.config/broo/murmur.ini &>/dev/null 2>&1 &
-    fi
+    fi &> /dev/null
 
     murmur_pid=$!
     sleep 3  # Give time for it to set up.
