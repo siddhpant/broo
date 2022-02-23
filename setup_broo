@@ -73,8 +73,8 @@ install_dependencies() {
                 (
                     set -x
 
-                    cd /tmp/mumble/build
-                    git clone https://github.com/mumble-voip/mumble.git
+                    cd /tmp
+                    git clone https://github.com/mumble-voip/mumble.git mumble
                     cd mumble
 
                     git submodule update --init --recursive
@@ -83,6 +83,7 @@ install_dependencies() {
                     sudo apt install -y \
                         build-essential \
                         cmake \
+                        checkinstall \
                         pkg-config \
                         libqt5texttospeech5-dev \
                         qttools5-dev \
