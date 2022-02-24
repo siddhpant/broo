@@ -62,22 +62,38 @@ install_dependencies() {
         echo -e "If you want, I can build it from source for you." \
                 "\nOtherwise I will go the normal package manager route." \
                 "\nGiving this option because upstream has improved support" \
-                "\nfor PipeWire, performance, and bug fixes." \
+                "\nfor PipeWire, performance, and bug fixes, and also " \
+                "\nbecause distro repos are outdated (as of 2022/02/24)." \
                 "\nI will also install the required dependencies." \
-                "\nThis is not a recommended option.\n"
-        read -n1 -p "Do you want to build Mumble from source? (y/n): " yn
+                "\n\n1. Install latest stable release. (Recommended)" \
+                "\n2. Install latest master branch. (Not recommended)" \
+                "\n3. Don't build from source.\n"
+        read -n1 -p "Enter your choice (1/2/3): " choice
         echo
-        case $yn in
-            y|Y)
+        case $choice in
+            1|2)
+                repo_url="https://github.com/mumble-voip/mumble.git"
+                if [[ $choice == 1 ]]; then
+                    latest=$(
+                        git ls-remote --tags $repo_url |
+                        cut --delimiter='/' --fields=3 |
+                        tail -n1
+                    )
+                    to_clone="--depth 1 --branch $latest $repo_url"
+                else
+                    to_clone="--depth 1 $repo_url"
+                fi
+
                 echo -e "\nEntering...\n"
                 (
                     set -x
 
                     cd /tmp
-                    git clone https://github.com/mumble-voip/mumble.git mumble
-                    cd mumble
+                    rm -rf mumble_broo
+                    git clone $to_clone mumble_broo
+                    cd mumble_broo
 
-                    git submodule update --init --recursive
+                    git submodule update --init --recursive --depth 1
                     mkdir build && cd build
 
                     sudo apt install -y \
@@ -140,6 +156,9 @@ install_dependencies() {
                         --nodoc
 
                     sudo systemctl disable mumble-server || true
+
+                    cd /tmp
+                    rm -rf mumble_broo
                 )
 
                 echo -e "\nDone!"
@@ -148,7 +167,7 @@ install_dependencies() {
                 dep_installed=true
                 ;;
 
-            n|N)
+            3)
                 echo -e "Okay, not building Mumble from source.\n"
                 ;;
 

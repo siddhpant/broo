@@ -76,6 +76,8 @@ If you see that your PC's user isn't in the channel when you join from your mobi
 
 If the problem still persists, it would be nice to go through the setup again.
 
+You can also force close broo with `q` and force start with `f`.
+
 ## Credits
 
 Inspired by the implementation of https://github.com/pzmarzly/mic_over_mumble/.
