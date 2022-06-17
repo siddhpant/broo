@@ -122,7 +122,9 @@ install_dependencies() {
                     avahi-daemon \
                     iproute2
 
-                export CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)
+                num_proc=$(nproc)
+
+                export CMAKE_BUILD_PARALLEL_LEVEL=$num_proc
 
                 release_id=$(python "../scripts/mumble-version.py")
                 version="$(echo $release_id | cut -d "~" -f 1).0"
@@ -142,7 +144,7 @@ install_dependencies() {
                     -Dxboxinput=OFF \
                     ..
 
-                make
+                make -j$num_proc
 
                 echo "Mumble (built from source)" > description-pak
 
