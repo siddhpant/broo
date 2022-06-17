@@ -86,7 +86,7 @@ get_mumble_sink_input_index() {
     # Returns / echo's the sink input number/index of Mumble client.
 
     mumble_sink_index=
-    prop="application.process.id = \"$(<"$VAR_RUN/mumble_client.pid")\""
+    prop="application.name = \"Mumble\""
 
     # Loop over pactl output to get the sink index of Mumble.
     while IFS= read -r line ; do
@@ -107,8 +107,10 @@ configure_sink() {
     # Suppress the output volume to speakers, otherwise we will hear ourselves.
     pactl set-sink-volume Broo 0
 
-    # Set Broo as default source.
+    # Set current sink as default sink, and set Broo as default source.
+    default_sink=$(pactl get-default-sink)
     pactl set-default-source Broo
+    pactl set-default-sink $default_sink
 
     # Move Mumble to Broo sink. For that, we need Mumble sink-input index.
     pactl move-sink-input $(get_mumble_sink_input_index) Broo
