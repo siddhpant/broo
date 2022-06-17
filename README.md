@@ -57,6 +57,7 @@ Do you want to start Broo, or close it? (s/c):
 - Press `s` to start Broo, or `c` to stop it.
 - Use the mic by choosing `Monitor of Broo` as your input source / mic in applications.
 - The script will reside in `~/.local/bin`, so you can run Broo from anywhere.
+- You can use `-h` or `--help` for help.
 
 ## Audiophile?
 

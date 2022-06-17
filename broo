@@ -35,15 +35,16 @@ start_mumble_server() {
     # The PID is saved automatically due to the config in ini file.
 
     if [[ -z $(command -v mumble-server > /dev/null) ]]; then
-        nohup mumble-server -ini ~/.config/broo/murmur.ini &>/dev/null 2>&1 &
+        nohup mumble-server -ini ~/.config/broo/murmur.ini \
+            &>"$VAR_RUN/murmur.out" &
     else
-        nohup murmurd -ini ~/.config/broo/murmur.ini &>/dev/null 2>&1 &
+        nohup murmurd -ini ~/.config/broo/murmur.ini &>"$VAR_RUN/murmur.out" &
     fi
 
     echo $! > "$VAR_RUN/murmur.pid"
 
     sleep 3  # Give time for it to set up.
-}  # End of start_mumble_server ()
+}  # End of start_mumble_server()
 
 
 stop_mumble_server() {
@@ -52,6 +53,7 @@ stop_mumble_server() {
     echo -n "."
     kill $(<"$VAR_RUN/murmur.pid")
     rm "$VAR_RUN/murmur.pid"
+    rm "$VAR_RUN/murmur.out"
 }  # End of stop_mumble_server()
 
 
@@ -60,13 +62,14 @@ start_mumble_client () {
 
     # Start the client with logs for monitoring, and save PID.
     nohup mumble "mumble://127.0.0.1" -platform offscreen \
-        &>"$VAR_RUN/nohup.out" &
+        &>"$VAR_RUN/mumble_client.out" &
     echo $! > "$VAR_RUN/mumble_client.pid"
 
     # Wait till the user connects (presses OK).
     # Thanks to 00prometheus on <https://superuser.com/a/900134>.
-    (tail -f "$VAR_RUN/nohup.out" &) | grep --line-buffered -q "ServerHandler:"
-}  # End of start_mumble_client ()
+    (tail -f "$VAR_RUN/mumble_client.out" &) | grep --line-buffered -q \
+                                                    "ServerHandler:"
+}  # End of start_mumble_client()
 
 
 stop_mumble_client() {
@@ -75,7 +78,7 @@ stop_mumble_client() {
     echo -n "."
     kill $(<"$VAR_RUN/mumble_client.pid")
     rm "$VAR_RUN/mumble_client.pid"
-    rm "$VAR_RUN/nohup.out"
+    rm "$VAR_RUN/mumble_client.out"
 }  # End of stop_mumble_client()
 
 
@@ -267,18 +270,64 @@ stop_broo() {
 }  # End of stop_broo()
 
 
-# Script will start executing from here when run from terminal.
+initiate() {
+    # The main stuff initiates here. Needs one 1-char argument.
 
-read -n1 -p "Do you want to start Broo, or close it? (s/c): " todo
-echo -e "\n"
+    case $1 in
+        f|F) force_kill_broo ;&  # Fallthrough to the next case.
+        s|S) start_broo ;;
+        c|C) stop_broo ;;
+        q|Q) force_kill_broo; echo "Force killed the requisite processes." ;;
+        p|P) fix_certificate_problem ;;
+        *)  echo "Shoo away your cat from the keyboard man!"
+            exit 1
+            ;;
+    esac
+}  # End of initiate()
 
-case $todo in
-    f|F) force_kill_broo ;&  # Fallthrough to the next case.
-    s|S) start_broo ;;
-    c|C) stop_broo ;;
-    q|Q) force_kill_broo; echo "Force killed the requisite processes." ;;
-    p|P) fix_certificate_problem ;;
-    *) echo "Shoo away your cat from the keyboard man!" ;;
+
+help_text() {
+    # Sends the help text when `-h` or `--help` in command-line arguments.
+
+    echo -e "
+        Usage: broo [OPTION]
+        Connect your phone / external devices as microphone wirelessly.
+
+        Broo will prompt for option on starting up. While it asks for starting
+        or stopping Broo, there are multiple valid inputs, listed below:
+            s    Set up / start Broo.
+            c    Stop / close Broo.
+            q    Force quit Broo (kills requisite processes).
+            f    Force quit Broo and start again.
+            p    Open mumble to fix certificate if Broo user isn't in channel.
+
+        Command-line argument is optional. They are as follows:
+            -h, --help           Show this help text and exit.
+            -s, --start          Equivalent to using 's' on Broo's prompt.
+            -c, --close          Equivalent to using 'c' on Broo's prompt.
+            -q, --force-quit     Equivalent to using 'q' on Broo's prompt.
+            -f, --force-start    Equivalent to using 'f' on Broo's prompt.
+            -p, --certificate    Equivalent to using 'p' on Broo's prompt.
+    " | cut -c 9- | head -n -1 | tail -n +2
+}  # End of help_text()
+
+
+# Script on calling starts from here.
+
+case ${1-prompt} in
+    prompt) read -n1 -p "Do you want to start Broo, or close it? (s/c): " todo
+            echo -e "\n"
+            initiate "$todo"
+            ;;
+    -h|--help) help_text ;;
+    -s|--start) initiate "s" ;;
+    -c|--close) initiate "c" ;;
+    -q|--force-quit) initiate "q" ;;
+    -f|--force-start) initiate "f" ;;
+    -p|--certificate) initiate "p" ;;
+    *) echo "Shoo away your cat from the keyboard man!"
+       exit 1
+       ;;
 esac
 
 
