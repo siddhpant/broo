@@ -154,7 +154,8 @@ install_dependencies() {
                     --pkgname=mumble \
                     --pkgversion=$version \
                     --pkgrelease=$release_id \
-                    --nodoc
+                    --nodoc \
+                    sudo make install
 
                 sudo systemctl disable mumble-server || true
 
