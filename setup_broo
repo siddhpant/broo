@@ -30,7 +30,7 @@ set -euo pipefail
 install_dependencies() {
     # Installs all the required dependencies.
 
-    if [[ $(command -v apt) ]]; then
+    if [[ ! $(command -v apt) ]]; then
         echo "No apt found."
         read  -n1 -p "Have you installed all the dependencies? (y/n): " yn
         case $yn in
@@ -50,133 +50,139 @@ install_dependencies() {
         esac
     fi
 
-    mumble=false
     dep_installed=false
 
-    if [[ $(command -v mumble) ]]; then
-        echo -e "Mumble not found in the system.\n"
+    if [[ ! $(command -v mumble) ]]; then
+        echo -e "
+            Mumble not found in the system.
+
+            If you want, I can build Mumble from source for you.
+            Otherwise I will go the normal package manager route.
+
+            Giving this option because upstream has improved support for
+            PipeWire, performance, and bug fixes, and also because distro
+            repos are outdated (as of 2022/02/27). I will also install the
+            required dependencies.
+
+            1. Install latest stable release. (Recommended)
+            2. Install latest master branch. (Not recommended)
+            3. Don't build from source.
+        " | cut -c 13- | tail -n +2
+
+        read -n1 -p "Enter your choice (1/2/3): " choice
+        echo
+        case $choice in
+            1|2)
+                repo_url="https://github.com/mumble-voip/mumble.git"
+                if [[ $choice == 1 ]]; then
+                    latest=$(
+                        git ls-remote --tags $repo_url |
+                        cut --delimiter='/' --fields=3 |
+                        tail -n1
+                    )
+                    to_clone="--depth 1 --branch $latest $repo_url"
+                else
+                    to_clone="--depth 1 $repo_url"
+                fi
+
+                echo -e "\nEntering...\n"
+                (
+                    set -x
+
+                    cd /tmp
+                    rm -rf mumble_broo
+                    git clone $to_clone mumble_broo
+                    cd mumble_broo
+
+                    git submodule update --init --recursive --depth 1
+                    mkdir build && cd build
+
+                    sudo apt update
+                    sudo apt install -y \
+                        build-essential \
+                        cmake \
+                        checkinstall \
+                        pkg-config \
+                        libqt5texttospeech5-dev \
+                        qttools5-dev \
+                        qttools5-dev-tools \
+                        libqt5svg5-dev \
+                        libboost-dev \
+                        libssl-dev \
+                        libprotobuf-dev \
+                        protobuf-compiler \
+                        libprotoc-dev \
+                        libcap-dev \
+                        libxi-dev \
+                        libasound2-dev \
+                        libogg-dev \
+                        libsndfile1-dev \
+                        libspeechd-dev \
+                        libavahi-compat-libdnssd-dev \
+                        libzeroc-ice-dev \
+                        libpoco-dev \
+                        g++-multilib \
+                        avahi-daemon \
+                        iproute2
+
+                    num_proc=$(nproc)
+
+                    export CMAKE_BUILD_PARALLEL_LEVEL=$num_proc
+
+                    release_id=$(python "../scripts/mumble-version.py")
+                    version="$(echo $release_id | cut -d "~" -f 1).0"
+
+                    cmake \
+                        -DBUILD_NUMBER=0 \
+                        -DRELEASE_ID=$release_id \
+                        -DCMAKE_UNITY_BUILD=ON \
+                        -Dalsa=OFF \
+                        -Dcrash-report=OFF \
+                        -Doptimize=ON \
+                        -Dpackaging=ON \
+                        -Dplugins=OFF \
+                        -Dqtspeech=ON \
+                        -Dtranslations=OFF \
+                        -Dwasapi=OFF \
+                        -Dxboxinput=OFF \
+                        ..
+
+                    make -j$num_proc
+
+                    echo "Mumble (built from source)" > description-pak
+
+                    sudo checkinstall \
+                        --install=yes \
+                        --showinstall=no \
+                        --pkgname=mumble \
+                        --pkgversion=$version \
+                        --pkgrelease=$release_id \
+                        --nodoc \
+                        sudo make install
+
+                    sudo systemctl disable mumble-server || true
+
+                    cd /tmp
+                    rm -rf mumble_broo
+                )
+
+                echo -e "\nDone!"
+
+                dep_installed=true
+                ;;
+
+            3)
+                echo -e "Okay, not building Mumble from source.\n"
+                ;;
+
+            *)
+                echo -e "Huh?? Defaulting to not building.\n" ;;
+        esac
+
     fi
 
-    echo -e "If you want, I can build Mumble from source for you." \
-            "\nOtherwise I will go the normal package manager route." \
-            "\nGiving this option because upstream has improved support for" \
-            "\nPipeWire, performance, and bug fixes, and also because distro" \
-            "\nrepos are outdated (as of 2022/02/27)." \
-            "\nI will also install the required dependencies.\n" \
-            "\n1. Install latest stable release. (Recommended)" \
-            "\n2. Install latest master branch. (Not recommended)" \
-            "\n3. Don't build from source.\n"
-    read -n1 -p "Enter your choice (1/2/3): " choice
-    echo
-    case $choice in
-        1|2)
-            repo_url="https://github.com/mumble-voip/mumble.git"
-            if [[ $choice == 1 ]]; then
-                latest=$(
-                    git ls-remote --tags $repo_url |
-                    cut --delimiter='/' --fields=3 |
-                    tail -n1
-                )
-                to_clone="--depth 1 --branch $latest $repo_url"
-            else
-                to_clone="--depth 1 $repo_url"
-            fi
 
-            echo -e "\nEntering...\n"
-            (
-                set -x
-
-                cd /tmp
-                rm -rf mumble_broo
-                git clone $to_clone mumble_broo
-                cd mumble_broo
-
-                git submodule update --init --recursive --depth 1
-                mkdir build && cd build
-
-                sudo apt update
-                sudo apt install -y \
-                    build-essential \
-                    cmake \
-                    checkinstall \
-                    pkg-config \
-                    libqt5texttospeech5-dev \
-                    qttools5-dev \
-                    qttools5-dev-tools \
-                    libqt5svg5-dev \
-                    libboost-dev \
-                    libssl-dev \
-                    libprotobuf-dev \
-                    protobuf-compiler \
-                    libprotoc-dev \
-                    libcap-dev \
-                    libxi-dev \
-                    libasound2-dev \
-                    libogg-dev \
-                    libsndfile1-dev \
-                    libspeechd-dev \
-                    libavahi-compat-libdnssd-dev \
-                    libzeroc-ice-dev \
-                    libpoco-dev \
-                    g++-multilib \
-                    avahi-daemon \
-                    iproute2
-
-                num_proc=$(nproc)
-
-                export CMAKE_BUILD_PARALLEL_LEVEL=$num_proc
-
-                release_id=$(python "../scripts/mumble-version.py")
-                version="$(echo $release_id | cut -d "~" -f 1).0"
-
-                cmake \
-                    -DBUILD_NUMBER=0 \
-                    -DRELEASE_ID=$release_id \
-                    -DCMAKE_UNITY_BUILD=ON \
-                    -Dalsa=OFF \
-                    -Dcrash-report=OFF \
-                    -Doptimize=ON \
-                    -Dpackaging=ON \
-                    -Dplugins=OFF \
-                    -Dqtspeech=ON \
-                    -Dtranslations=OFF \
-                    -Dwasapi=OFF \
-                    -Dxboxinput=OFF \
-                    ..
-
-                make -j$num_proc
-
-                echo "Mumble (built from source)" > description-pak
-
-                sudo checkinstall \
-                    --install=yes \
-                    --showinstall=no \
-                    --pkgname=mumble \
-                    --pkgversion=$version \
-                    --pkgrelease=$release_id \
-                    --nodoc \
-                    sudo make install
-
-                sudo systemctl disable mumble-server || true
-
-                cd /tmp
-                rm -rf mumble_broo
-            )
-
-            echo -e "\nDone!"
-
-            dep_installed=true
-            ;;
-
-        3)
-            echo -e "Okay, not building Mumble from source.\n"
-            ;;
-
-        *)
-            echo -e "Huh?? Defaulting to not building.\n" ;;
-    esac
-
-    if ! $dep_installed; then
+    if [[ "$dep_installed" == "false" ]]; then
         read -n1 -p "Do you want to install / update dependencies? (y/n): " yn
         echo
         case $yn in
