@@ -109,7 +109,7 @@ configure_sink() {
 
     # Set current sink as default sink, and set Broo as default source.
     default_sink=$(pactl get-default-sink)
-    pactl set-default-source Broo
+    pactl set-default-source Broo.monitor
     pactl set-default-sink $default_sink
 
     # Move Mumble to Broo sink. For that, we need Mumble sink-input index.
