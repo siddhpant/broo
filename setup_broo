@@ -30,7 +30,7 @@ set -euo pipefail
 install_dependencies() {
     # Installs all the required dependencies.
 
-    if [[ ! -z $(command -v apt > /dev/null) ]]; then
+    if [[ $(command -v apt) ]]; then
         echo "No apt found."
         read  -n1 -p "Have you installed all the dependencies? (y/n): " yn
         case $yn in
@@ -53,7 +53,7 @@ install_dependencies() {
     mumble=false
     dep_installed=false
 
-    if [[ ! -z $(command -v mumble > /dev/null) ]]; then
+    if [[ $(command -v mumble) ]]; then
         echo -e "Mumble not found in the system.\n"
     fi
 
@@ -281,7 +281,7 @@ set_up_mumble() {
     read -n1 -p "Press any key to start Mumble..."
 
     # Start the server.
-    if [[ -z $(command -v mumble-server > /dev/null) ]]; then
+    if [[ $(command -v mumble-server) ]]; then
         nohup mumble-server -ini ~/.config/broo/murmur.ini &>/dev/null 2>&1 &
     else
         nohup murmurd -ini ~/.config/broo/murmur.ini &>/dev/null 2>&1 &
