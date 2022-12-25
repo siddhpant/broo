@@ -95,6 +95,16 @@ install_dependencies() {
                     cd mumble_broo
 
                     git submodule update --init --recursive --depth 1
+                    cd 3rdparty/opus
+
+                    if [[ "$(git rev-parse --short HEAD)" != "e85ed772\n" ]]
+                    then
+                        git fetch --tags
+                        git switch --detach v1.3.1
+                    fi
+
+                    cd ../../
+
                     mkdir build && cd build
 
                     sudo apt update
