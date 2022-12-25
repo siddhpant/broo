@@ -51,8 +51,11 @@ install_dependencies() {
     fi
 
     dep_installed=false
+    mumble_installed=true
 
     if [[ ! $(command -v mumble) ]]; then
+        mumble_installed=false
+
         echo -e "
             Mumble not found in the system.
 
@@ -179,10 +182,29 @@ install_dependencies() {
                 echo -e "\nDone!"
 
                 dep_installed=true
+                mumble_installed=true
                 ;;
 
             3)
                 echo -e "Okay, not building Mumble from source.\n"
+
+                read -n1 -p \
+                    "Do you want to install Mumble from Flathub? (y/n): " \
+                    yn
+                echo
+
+                case $yn in
+                    y|Y)
+                        flatpak install -y --noninteractive mumble
+                        mumble_installed=true
+                        ;;
+                    n|N)
+                        echo -e "Not installing Mumble via FLathub.\n"
+                        ;;
+                    *)
+                        echo -e "Huh? Assuming that's a no.\n"
+                        ;;
+                esac
                 ;;
 
             *)
@@ -202,9 +224,11 @@ install_dependencies() {
                     sudo apt update
                     sudo apt install -y \
                         avahi-daemon \
-                        iproute2 \
-                        mumble \
-                        mumble-server
+                        iproute2
+
+                    if [[ "$mumble_installed" == "false" ]]; then
+                        sudo apt install -y mumble mumble-server
+                    fi
 
                     sudo systemctl disable mumble-server || true
                 )
