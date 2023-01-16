@@ -1,6 +1,4 @@
 # Broo
-
- [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
  
 - Connect your phone as microphone wirelessly.
 - Get clear voice and low latency with minimal CPU overhead.
@@ -8,8 +6,7 @@
 - Supports both modern PipeWire and legacy PulseAudio.
 - For PulseAudio use case, restores backed-up ALSA settings stored in `~/.config/asound.state`, if it exists.
 
-
-## Reason for such a name
+## Why call it Broo?
 
 - Sanskrit धातु (lexical word stem) &nbsp;" **ब्रू** "&nbsp; (brU) which means "to speak".
 - You go like "BROOOOOOOOO that was NICE" while vibing with your homies.
@@ -18,8 +15,8 @@
 
 - A GNU/Linux distro with either PipeWire or PulseAudio.
 - A smartphone (or anything with a mic which can connect to a local Mumble server).
-    - For Android → Mumla app ([F-Droid](https://f-droid.org/packages/se.lublin.mumla/)) [[Source](https://gitlab.com/quite/mumla)]
-    - For iOS → Official Mumble app ([App Store](https://apps.apple.com/us/app/mumble/id443472808)) [[Source, unmaintained](https://github.com/mumble-voip/mumble-iphoneos)]
+    - For Android → Mumla app* ([F-Droid](https://f-droid.org/packages/se.lublin.mumla/)) [[Source](https://gitlab.com/quite/mumla)]
+    - For iOS → Official Mumble app* ([App Store](https://apps.apple.com/us/app/mumble/id443472808)) [[Source](https://github.com/mumble-voip/mumble-iphoneos)]
 
 ### For distros with the `apt` package manager.
 
@@ -30,7 +27,8 @@
 Install the following:
 
 - `mumble`
-- `murmur` or `mumble-server`
+    - Typically includes `mumble-server` or `murmur`.
+    - If not, then install them too.
 - `avahi` or `avahi-daemon`
 - `iproute2`
 
@@ -81,8 +79,39 @@ If the problem still persists, it would be nice to go through the setup again.
 
 You can also force close broo with `q` and force start with `f`.
 
+---
+
 ## Credits
 
 Inspired by the implementation of https://github.com/pzmarzly/mic_over_mumble/.
 
 I have tried to hopefully iron out some problems with the original implementation by making the script from scratch to streamline the code, and added absolutely necessary features such as supporting PipeWire, adding prompt and ability to close the terminal, ALSA setting restore, etc.
+
+## Footnotes
+
+\* Due to devs being busy, the iOS app is officially unmaintained, while Android app is sorta in the same boat but short of being abandoned.
+
+But the apps seem to work for many people thanks to Mubmle's backward compatibility. **Any breakages maybe due to system changes rather than problems in Broo.**
+
+If you are someone capable of creating apps, a new Mumble client for mobile would be a nice project. Probably could use Flutter for cross-platform (idk much), with something building on the lines of https://github.com/EPNW/dumble.
+
+---
+
+## License
+
+Copyright (C) 2021  Siddh Raman Pant
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+The online repository can be found at <https://github.com/siddhpant/broo>.
