@@ -93,7 +93,7 @@ I have tried to hopefully iron out some problems with the original implementatio
 
 But the apps seem to work for many people thanks to Mubmle's backward compatibility. **Any breakages maybe due to system changes rather than problems in Broo.**
 
-If you are someone capable of creating apps, a new Mumble client for mobile would be a nice project. Probably could use Flutter for cross-platform (idk much), with something building on the lines of https://github.com/EPNW/dumble.
+If you are someone capable of creating apps, a new Mumble client for mobile would be a nice project. Probably could use Flutter for cross-platform (idk much), with something building on the lines of using [libmumble](https://github.com/mumble-voip/libmumble) + [dart:ffi](https://dart.dev/guides/libraries/c-interop), or [dumble](https://github.com/EPNW/dumble).
 
 ---
 
