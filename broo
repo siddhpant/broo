@@ -109,14 +109,13 @@ configure_sink() {
 
     # Set current sink as default sink, and set Broo as default source.
     default_sink=$(pactl get-default-sink)
-    pactl set-default-source Broo
+    pactl set-default-source Broo.monitor
     pactl set-default-sink $default_sink
 
     # Move Mumble to Broo sink. For that, we need Mumble sink-input index.
     pactl move-sink-input $(get_mumble_sink_input_index) Broo
 
-    echo -e \
-        'Done! Use "Broo" or "Monitor of Broo" as your input mic, and enjoy!\n'
+    echo -e "Done! Use \"Monitor of Broo\" as your input mic, and enjoy!\n"
 }  # End of configure_sink()
 
 
@@ -124,7 +123,7 @@ add_mic_pipewire() {
     # Creates a virtual mic by creating a PipeWire loopback, and saves its PID.
 
     nohup pw-loopback \
-    --capture-props='media.class=Audio/Duplex
+    --capture-props='media.class=Audio/Sink
                      node.name=Broo node.description=Broo' &>/dev/null 2>&1 &
 
     echo $! > "$VAR_RUN/pw_loopback.pid"
