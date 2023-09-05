@@ -133,8 +133,20 @@ install_dependencies() {
 
                     export CMAKE_BUILD_PARALLEL_LEVEL=$num_proc
 
+                    # Example: release_id = "1.6". But it may also be longer,
+                    # like "1.5.0~2021-11-11~ge54798cbd~snapshot".
                     release_id=$(python "../scripts/mumble-version.py")
-                    version="$(echo $release_id | cut -d "~" -f 1).0"
+
+                    if [[ $choice == 1 ]]; then
+                        version=$(git describe --tags)  # Example: "v1.5.517".
+                        version="${version:1}"  # Remove leading "v".
+                    else
+                        # Example: version = "1.6~git27e9552".
+                        version="$release_id~git$(git rev-parse --short HEAD)"
+                    fi
+
+                    # Append "+broo" to signify we built the package.
+                    version+="+broo"    # Example: "1.6~git27e9552+broo".
 
                     cmake \
                         -DBUILD_NUMBER=0 \
