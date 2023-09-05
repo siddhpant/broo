@@ -29,6 +29,8 @@ set -euo pipefail
 # Folder to store our ephemeral files containing PIDs etc.
 VAR_RUN="/var/run/user/$UID/broo"
 
+# Used to determine if we should use offscreen flag or not
+OFFSCREEN_MODE=false
 
 start_mumble_server() {
     # Starts the Mumble server.
@@ -61,9 +63,15 @@ start_mumble_client () {
     # Starts the Mumble client, stores its PID, and waits till connection.
 
     # Start the client with logs for monitoring, and save PID.
-    nohup mumble "mumble://127.0.0.1" -platform offscreen \
-        &>"$VAR_RUN/mumble_client.out" &
-    echo $! > "$VAR_RUN/mumble_client.pid"
+    if $OFFSCREEN_MODE ; then
+        nohup mumble "mumble://127.0.0.1" -platform offscreen \
+            &>"$VAR_RUN/mumble_client.out" &
+        echo $! > "$VAR_RUN/mumble_client.pid"
+    else
+        nohup mumble "mumble://127.0.0.1" \
+            &>"$VAR_RUN/mumble_client.out" &
+        echo $! > "$VAR_RUN/mumble_client.pid"
+    fi
 
     # Wait till the user connects (presses OK).
     # Thanks to 00prometheus on <https://superuser.com/a/900134>.
@@ -281,6 +289,7 @@ initiate() {
         c|C) stop_broo ;;
         q|Q) force_kill_broo; echo "Force killed the requisite processes." ;;
         p|P) fix_certificate_problem ;;
+        o|O) OFFSCREEN_MODE=true; start_broo ;;
         *)  echo "Shoo away your cat from the keyboard man!"
             exit 1
             ;;
@@ -302,6 +311,7 @@ help_text() {
             q    Force quit Broo (kills requisite processes).
             f    Force quit Broo and start again.
             p    Open mumble to fix certificate if Broo user isn't in channel.
+            o    Start broo in offscreen mode.
 
         Command-line argument is optional. They are as follows:
             -h, --help           Show this help text and exit.
@@ -310,6 +320,7 @@ help_text() {
             -q, --force-quit     Equivalent to using 'q' on Broo's prompt.
             -f, --force-start    Equivalent to using 'f' on Broo's prompt.
             -p, --certificate    Equivalent to using 'p' on Broo's prompt.
+            -o, --offscreen      Equivalent to using 'o' on Broo's prompt.
     " | cut -c 9- | head -n -1 | tail -n +2
 }  # End of help_text()
 
@@ -327,6 +338,7 @@ case ${1-prompt} in
     -q|--force-quit) initiate "q" ;;
     -f|--force-start) initiate "f" ;;
     -p|--certificate) initiate "p" ;;
+    -o|--offscreen) initiate "o" ;;
     *) echo "Shoo away your cat from the keyboard man!"
        exit 1
        ;;
