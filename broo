@@ -65,7 +65,6 @@ start_mumble_client () {
         &>"$VAR_RUN/mumble_client.out" &
     echo $! > "$VAR_RUN/mumble_client.pid"
 
-    # Wait till the user connects (presses OK).
     # Thanks to 00prometheus on <https://superuser.com/a/900134>.
     (tail -f "$VAR_RUN/mumble_client.out" &) | grep --line-buffered -q \
                                                     "ServerHandler:"
