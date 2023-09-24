@@ -339,7 +339,7 @@ set_up_mumble() {
     # Stop the server.
     kill $murmur_pid
 
-    echo "Done setting up Mumble!"
+    echo -e "Done setting up Mumble!\n"
 }  # End of set_up_mumble()
 
 
@@ -353,6 +353,8 @@ copy_broo() {
     if [[ ! ":$PATH:" == *"$HOME/.local/bin:"* ]]; then
         echo "Please add ~/.local/bin to your path before running Broo!"
     fi
+
+    echo "Done setting up the 'broo' command!"
 }
 
 
