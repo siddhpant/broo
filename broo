@@ -26,6 +26,9 @@
 # Exit on errors.
 set -euo pipefail
 
+# Override localisation (for eg., pactl parsing is affected by it).
+export LC_ALL=C.UTF-8
+
 # Folder to store our ephemeral files containing PIDs etc.
 VAR_RUN="/var/run/user/$UID/broo"
 
