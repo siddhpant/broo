@@ -254,17 +254,10 @@ install_dependencies() {
 set_up_mumble() {
     # Sets up Mumble for quick use later.
 
-    # Purge any existing cache.
-    if [[ -e ~/.cache/broo ]]; then
-        rm -rf ~/.cache/broo
-    fi
-
-    # Create config folder or purge any existing one.
-    if [[ -e ~/.config/broo ]]; then
-        rm -rf ~/.config/broo/*
-    else
-        mkdir ~/.config/broo
-    fi
+    # Purge any existing and config.
+    rm -rf ~/.cache/broo
+    rm -rf ~/.config/broo
+    mkdir ~/.config/broo
 
     # Set password for new / unregistered connections.
     pass=
