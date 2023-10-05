@@ -71,7 +71,7 @@ start_mumble_client () {
 
     # Thanks to 00prometheus on <https://superuser.com/a/900134>.
     (tail -f "$VAR_RUN/mumble_client.out" &) | grep --line-buffered -q \
-                                                    "ServerHandler:"
+                                                    "ServerHandler: TLS cipher"
 }  # End of start_mumble_client()
 
 
