@@ -168,13 +168,15 @@ install_dependencies() {
                     echo "Mumble (built from source)" > description-pak
 
                     sudo checkinstall \
-                        --install=yes \
+                        --install=no \
                         --showinstall=no \
                         --pkgname=mumble \
                         --pkgversion=$version \
                         --pkgrelease=$release_id \
                         --nodoc \
-                        sudo make install
+                        make install
+
+                    sudo apt-get install ./mumble*.deb
 
                     sudo systemctl disable mumble-server || true
 
