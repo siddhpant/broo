@@ -38,10 +38,11 @@ start_mumble_server() {
     # The PID is saved automatically due to the config in ini file.
 
     if [[ $(command -v mumble-server) ]]; then
-        nohup mumble-server -ini ~/.config/broo/murmur.ini \
+        nohup mumble-server -ini ~/.config/broo/murmur.ini -fg \
             &>"$VAR_RUN/murmur.out" &
     else
-        nohup murmurd -ini ~/.config/broo/murmur.ini &>"$VAR_RUN/murmur.out" &
+        nohup murmurd -ini ~/.config/broo/murmur.ini -fg \
+            &>"$VAR_RUN/murmur.out" &
     fi
 
     echo $! > "$VAR_RUN/murmur.pid"
