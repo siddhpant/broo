@@ -372,7 +372,7 @@ test_broo() {
         echo "Test successful - Broo works successsfully as it was intended!"
 
     elif [[ $exit_status -eq 124 ]]; then
-        echo $line
+        $HOME/.local/bin/broo -q
         echo -e "
             Timed out!
 
@@ -390,6 +390,9 @@ test_broo() {
 
         echo "This file is created to disable offscreen run of mumble." \
             > $HOME/.config/broo/no_offscreen
+
+        echo $line
+
 
     elif [[ $exit_status -eq 125 ]]; then
         echo $line
