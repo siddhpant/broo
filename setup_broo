@@ -167,13 +167,14 @@ install_dependencies() {
 
                     echo "Mumble (built from source)" > description-pak
 
-                    sudo checkinstall \
+                    checkinstall \
                         --install=no \
                         --showinstall=no \
                         --pkgname=mumble \
                         --pkgversion=$version \
                         --pkgrelease=$release_id \
                         --nodoc \
+                        --default \
                         make install
 
                     sudo apt-get install ./mumble*.deb
