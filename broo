@@ -32,16 +32,18 @@ export LC_ALL=C.UTF-8
 # Folder to store our ephemeral files containing PIDs etc.
 VAR_RUN="/var/run/user/$UID/broo"
 
+# Folder which stores broo config.
+BROO_CFG_LOC="$HOME/.config/broo"
 
 start_mumble_server() {
     # Starts the Mumble server.
     # The PID is saved automatically due to the config in ini file.
 
     if [[ $(command -v mumble-server) ]]; then
-        nohup mumble-server -ini ~/.config/broo/murmur.ini -fg \
+        nohup mumble-server -ini "$BROO_CFG_LOC/murmur.ini" -fg \
             &>"$VAR_RUN/murmur.out" &
     else
-        nohup murmurd -ini ~/.config/broo/murmur.ini -fg \
+        nohup murmurd -ini "$BROO_CFG_LOC/murmur.ini" -fg \
             &>"$VAR_RUN/murmur.out" &
     fi
 
@@ -62,14 +64,25 @@ stop_mumble_server() {
 
 
 start_mumble_client () {
-    # Starts the Mumble client, stores its PID, and waits till connection.
+    # Starts the Mumble client (with logs for monitoring), stores its PID,
+    # and waits till the connection to server is established.
 
-    # Start the client with logs for monitoring, and save PID.
-    nohup mumble "mumble://127.0.0.1" -platform offscreen \
-        &>"$VAR_RUN/mumble_client.out" &
+    # We prefer offscreen, but there can be a rare case that using offscreen
+    # can cause mumble to not connect to server, so we test during setup.
+    # A file "no_offscreen" is created if we don't want to do offscreen.
+    if [[ -f "$BROO_CFG_LOC/no_offscreen" ]]; then
+        nohup mumble "mumble://127.0.0.1" \ &>"$VAR_RUN/mumble_client.out" &
+    else
+        nohup mumble "mumble://127.0.0.1" -platform offscreen \
+            &>"$VAR_RUN/mumble_client.out" &
+    fi
+
+    # Save the PID.
     echo $! > "$VAR_RUN/mumble_client.pid"
 
-    # Thanks to 00prometheus on <https://superuser.com/a/900134>.
+    # Wait till we establish a conenction. Upon connection, a line is logged
+    # starting with "ServerHandler: TLS cipher", so we monitor the logs.
+    # tail + grep idea by 00prometheus on <https://superuser.com/a/900134>.
     (tail -f "$VAR_RUN/mumble_client.out" &) | grep --line-buffered -q \
                                                     "ServerHandler: TLS cipher"
 }  # End of start_mumble_client()

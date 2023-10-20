@@ -311,6 +311,7 @@ set_up_mumble() {
         - Go to Configure -> Certificate Wizard and go through the steps.
         - Then open settings (Configure -> Settings).
         - In the 'Audio Input' screen, disable all types of audio processing.
+        - Turn off anything which can cause app sound, like audio and mute cue.
         - If you want, you can proceed to change other settings at your will.
         - After you are done, close Mumble and come back here.
 
@@ -350,9 +351,58 @@ copy_broo() {
         echo "Please add ~/.local/bin to your path before running Broo!"
     fi
 
-    echo "Done setting up the 'broo' command!"
+    echo -e "Done setting up the 'broo' command!\n"
 }
 
+
+test_broo() {
+    echo "Testing whether broo works offscreen..."
+    line="--------------------------------------------------------------------"
+    echo $line
+
+    set +e
+    timeout 30 $HOME/.local/bin/broo -s  # 30 seconds are more than enough.
+    exit_status=$?
+    set -e
+
+    if [[ $exit_status -eq 0 ]]; then
+        echo
+        $HOME/.local/bin/broo -c
+        echo $line
+        echo "Test successful - Broo works successsfully as it was intended!"
+
+    elif [[ $exit_status -eq 124 ]]; then
+        echo $line
+        echo -e "
+            Timed out!
+
+            Broo probably was stuck during initialisation. If you did the
+            mumble certificate setup correctly (if not sure please do again),
+            # then it might be that a rare QT (or mumble?) problem affecting
+            your system, wherein we cannot connect to the server when using
+            the offscreen platform.
+
+            Running broo will show the mumble app instead of silently running
+            and handling it for you. Please do not close it while using broo.
+            This behaviour can be stopped by removing the 'no_offscreen' file
+            from $HOME/.config/broo/.
+        " | awk '{$1=$1};1'
+
+        echo "This file is created to disable offscreen run of mumble." \
+            > $HOME/.config/broo/no_offscreen
+
+    elif [[ $exit_status -eq 125 ]]; then
+        echo $line
+        echo "The 'timeout' command failed! Consider checking coreutils."
+        exit 1
+
+    else
+        echo $line
+        echo "An unknown problem encountered. Check the output or logs."
+        exit 1
+
+    fi
+}
 
 # Script will start executing from here when run from terminal.
 
@@ -361,6 +411,7 @@ echo -e "Setting up Broo...\n"
 install_dependencies
 set_up_mumble
 copy_broo
+test_broo
 
 echo -e "
     Now set up the mobile app.
