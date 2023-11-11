@@ -92,14 +92,6 @@ install_dependencies() {
                 (
                     set -x
 
-                    cd /tmp
-                    rm -rf mumble_broo
-                    git clone $to_clone mumble_broo
-                    cd mumble_broo
-
-                    git submodule update --init --recursive --depth 1
-                    mkdir build && cd build
-
                     sudo apt update
                     sudo apt install -y \
                         build-essential \
@@ -128,6 +120,14 @@ install_dependencies() {
                         g++-multilib \
                         avahi-daemon \
                         iproute2
+
+                    cd /tmp
+                    rm -rf mumble_broo
+                    git clone $to_clone mumble_broo
+                    cd mumble_broo
+
+                    git submodule update --init --recursive --depth 1
+                    mkdir build && cd build
 
                     num_proc=$(nproc)
 
