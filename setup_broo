@@ -293,10 +293,10 @@ set_up_mumble() {
         bandwidth=558000 ; Max possible BW, see Mumble source on GitHub.
         registerName=Broo
         database=$HOME/.config/broo/murmur.sqlite
-        logfile=$logfile
+        logfile=\"$logfile\"
         logdays=-1  ; Don't store logs in the database.
-        password=$pass
-        welcometext=  ; Why even welcome ourselves? :-P
+        password=\"$pass\"
+        welcometext=\"\"  ; Why even welcome ourselves? :-P
     " | awk '{$1=$1};1' > $murmur_config_path
 
     # Tell user to use the Mumble GUI for configuring it once.
