@@ -148,6 +148,8 @@ install_dependencies() {
                     # Append "+broo" to signify we built the package.
                     version+="+broo"    # Example: "1.6~git27e9552+broo".
 
+                    echo "Mumble (built from source)" > description-pak
+
                     cmake \
                         -DBUILD_NUMBER=0 \
                         -DRELEASE_ID=$release_id \
@@ -163,11 +165,20 @@ install_dependencies() {
                         -Dxboxinput=OFF \
                         ..
 
-                    make -j$num_proc
+                    # Normally, we will have make WITHOUT install and have
+                    # checkinstall create a package which will then be used
+                    # to install. But checkinstall has a long-standing bug
+                    # (#717778 on debbugs) so it is unable to create package
+                    # for files not existing.
 
-                    echo "Mumble (built from source)" > description-pak
+                    # So we will install using make, then create packages using
+                    # checkinstall (which for some reason cannot access files
+                    # without sudo), and then install that package, so that the
+                    # package manager can uninstall mumble later successfully.
 
-                    checkinstall \
+                    sudo make -j$num_proc install
+
+                    sudo checkinstall \
                         --install=no \
                         --showinstall=no \
                         --pkgname=mumble \
