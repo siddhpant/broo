@@ -261,12 +261,23 @@ set_up_mumble() {
     mkdir ~/.config/broo
 
     # Set password for new / unregistered connections.
-    pass=
+    pass="a"
+    pass_confirm="b"
     echo
     read -n1 -p "Do you want to set password for new connections? (y/n): " yn
     echo
     case $yn in
-        y|Y) read -p "Enter password (NB: saved unencrypted): " pass; echo ;;
+        y|Y)
+            while [[ "$pass" != "$pass_confirm" ]]; do
+                printf "Note: Password is saved **unencrypted**, and should "
+                echo "not contain double quotes (\")."
+                read -sp "Enter password: " pass; echo
+                read -sp "Enter password again: " pass_confirm; echo
+                if [[ "$pass" != "$pass_confirm" ]]; then
+                    echo -e "\nPassword doesn't match!\n"
+                fi
+            done
+            ;;
         n|N) ;;
         *) echo "Huh?? Defaulting to no password." ;;
     esac
