@@ -33,6 +33,7 @@ install_dependencies() {
     if [[ ! $(command -v apt) ]]; then
         echo "No apt found."
         read  -n1 -p "Have you installed all the dependencies? (y/n): " yn
+        echo
         case $yn in
             y|Y)
                 echo "Cool! Going ahead."
@@ -246,6 +247,21 @@ install_dependencies() {
 }  # End of install_dependencies()
 
 
+check_mumble() {
+    # Check whether mumble is installed.
+
+    if [[ ! $(command -v mumble) ]]; then
+        echo "Mumble not found! Did you correctly install it?"
+        exit 1
+
+    elif [[ ! $(command -v mumble-server || command -v murmurd) ]]; then
+        echo "Mumble server not found! Did you correctly install it?"
+        exit 1
+
+    fi
+}  # End of check_mumble()
+
+
 set_up_mumble() {
     # Sets up Mumble for quick use later.
 
@@ -418,6 +434,7 @@ test_broo() {
 echo -e "Setting up Broo...\n"
 
 install_dependencies
+check_mumble
 set_up_mumble
 copy_broo
 test_broo
