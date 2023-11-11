@@ -193,28 +193,11 @@ install_dependencies() {
 
             3)
                 echo -e "Okay, not building Mumble from source.\n"
-
-                read -n1 -p \
-                    "Do you want to install Mumble from Flathub? (y/n): " \
-                    yn
-                echo
-
-                case $yn in
-                    y|Y)
-                        flatpak install -y --noninteractive mumble
-                        mumble_installed=true
-                        ;;
-                    n|N)
-                        echo -e "Not installing Mumble via FLathub.\n"
-                        ;;
-                    *)
-                        echo -e "Huh? Assuming that's a no.\n"
-                        ;;
-                esac
                 ;;
 
             *)
-                echo -e "Huh?? Defaulting to not building.\n" ;;
+                echo -e "Huh?? Defaulting to not building.\n"
+                ;;
         esac
 
     fi
