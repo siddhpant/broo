@@ -326,7 +326,7 @@ set_up_mumble() {
 
         Once Mumble starts, do the following:
 
-        - Connect to the server on 127.0.0.1.
+        - Connect to the server on 127.0.0.1 (if it isn't there, add it).
         - Right click on your user and make sure it is muted.
         - Right click on your user and click on 'Register' to register it.
         - Go to Configure -> Audio Wizard and go through the steps.
