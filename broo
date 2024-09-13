@@ -119,13 +119,14 @@ get_mumble_sink_input_index() {
 
 configure_sink() {
     # Configures the Broo sink created for further use.
+    source_name=$1
 
     # Suppress the output volume to speakers, otherwise we will hear ourselves.
     pactl set-sink-volume Broo 0
 
     # Set current sink as default sink, and set Broo as default source.
     default_sink=$(pactl get-default-sink)
-    pactl set-default-source Broo
+    pactl set-default-source $source_name
     pactl set-default-sink $default_sink
 
     # Move Mumble to Broo sink. For that, we need Mumble sink-input index.
@@ -209,11 +210,11 @@ start_broo() {
     # Check if PipeWire used ("PipeWire" will be a substring in output).
     if [[ $(pactl info | grep "^Server Name") =~ "PipeWire" ]]; then
         add_mic_pipewire
+        configure_sink Broo
     else
         add_mic_pulseaudio
+        configure_sink Broo.monitor
     fi
-
-    configure_sink
 
     server_ip=$(ip -4 a | grep "state UP" -A1 |
                 awk 'NR!=1 {print $2}' | cut -d '/' -f1)
