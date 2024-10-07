@@ -98,6 +98,78 @@ stop_mumble_client() {
 }  # End of stop_mumble_client()
 
 
+add_sink_pipewire() {
+    # Creates a virtual sink using a PipeWire loopback, and saves its PID.
+
+    nohup pw-loopback \
+        --capture-props='media.class=Audio/Sink
+                         node.name=Shru node.description=Shru' \
+    &>/dev/null 2>&1 &
+
+    echo $! > "$VAR_RUN/pw_loopback.pid"
+    sleep 3  # Give time for it to set up.
+}  # End of add_sink_pipewire()
+
+
+remove_sink_pipewire() {
+    # Removes the PipeWire loopback, and deletes the PID file.
+
+    echo -n "."
+    kill $(<"$VAR_RUN/pw_loopback.pid")
+    rm "$VAR_RUN/pw_loopback.pid"
+}  # End of remove_sink_pipewire()
+
+
+add_sink_pulseaudio() {
+    # Loads a sink using pactl, and saves the index returned.
+
+    # Add sink and save the index it returns.
+    pa_sink_index=$(pactl load-module module-null-sink \
+                          sink_name="Shru" \
+                          sink_properties=device.description="Shru")
+
+    echo $pa_sink_index > "$VAR_RUN/pa_sink.index"
+    sleep 3  # Give time for it to set up.
+
+    # Restore ALSA settings if the backup file exists.
+    if [ -f ~/.config/asound.state ]; then
+        alsactl --file ~/.config/asound.state restore
+    fi
+}  # End of add_sink_pulseaudio()
+
+
+remove_sink_pulseaudio() {
+    # Unloads the PulseAudio sink, and deletes the index file.
+
+    echo -n "."
+    pactl unload-module $(<"$VAR_RUN/pa_sink.index")
+    rm "$VAR_RUN/pa_sink.index"
+}  # End of remove_sink_pulseaudio()
+
+
+add_sink() {
+    # Adds a sink named Shru (श्रु) to listen to / capture the Mumble output.
+
+    # Check if PipeWire used ("PipeWire" will be a substring in output).
+    if [[ $(pactl info | grep "^Server Name") =~ "PipeWire" ]]; then
+        add_sink_pipewire
+    else
+        add_sink_pulseaudio
+    fi
+}
+
+
+remove_sink() {
+    # Removes the Shru sink.
+
+    if [[ $(pactl info | grep "^Server Name") =~ "PipeWire" ]]; then
+        remove_sink_pipewire
+    else
+        remove_sink_pulseaudio
+    fi
+}
+
+
 get_mumble_sink_input_index() {
     # Returns / echo's the sink input number/index of Mumble client.
 
@@ -117,70 +189,44 @@ get_mumble_sink_input_index() {
 }  # End of get_mumble_sink_input_index()
 
 
-configure_sink() {
-    # Configures the Broo sink created for further use.
+add_mic() {
+    # Configures the Shru sink and creates the Broo (ब्रू) source for output.
 
     # Suppress the output volume to speakers, otherwise we will hear ourselves.
-    pactl set-sink-volume Broo 0
+    pactl set-sink-volume Shru 0
 
-    # Set current sink as default sink, and set Broo as default source.
+    # Set current sink as default sink.
     default_sink=$(pactl get-default-sink)
-    pactl set-default-source Broo.monitor
     pactl set-default-sink $default_sink
 
     # Move Mumble to Broo sink. For that, we need Mumble sink-input index.
-    pactl move-sink-input $(get_mumble_sink_input_index) Broo
+    pactl move-sink-input $(get_mumble_sink_input_index) Shru
 
-    echo -e "Done! Use \"Monitor of Broo\" as your input mic, and enjoy!\n"
-}  # End of configure_sink()
+    # Remap the sink monitor to a dedicated source to show up on all apps.
+    # This will be the "Broo" mic. Save the index it returns.
+    pa_source_index=$(pactl load-module module-remap-source \
+                            master=Shru.monitor \
+                            source_name=Broo \
+                            source_properties=device.description="Broo")
 
-
-add_mic_pipewire() {
-    # Creates a virtual mic by creating a PipeWire loopback, and saves its PID.
-
-    nohup pw-loopback \
-    --capture-props='media.class=Audio/Sink
-                     node.name=Broo node.description=Broo' &>/dev/null 2>&1 &
-
-    echo $! > "$VAR_RUN/pw_loopback.pid"
-    sleep 3  # Give time for it to set up.
-}  # End of add_mic_pipewire()
-
-
-remove_mic_pipewire() {
-    # Removes the PipeWire loopback, and deletes the PID file.
-
-    echo -n "."
-    kill $(<"$VAR_RUN/pw_loopback.pid")
-    rm "$VAR_RUN/pw_loopback.pid"
-}  # End of remove_mic_pipewire()
-
-
-add_mic_pulseaudio() {
-    # Loads a sink using pactl, and saves the index returned.
-
-    # Add sink and save the index it returns.
-    pa_index=$(pactl load-module module-null-sink \
-                     sink_name="Broo" \
-                     sink_properties=device.description="Broo")
-
-    echo $pa_index > "$VAR_RUN/pa_sink.index"
+    echo $pa_source_index > "$VAR_RUN/pa_source.index"
     sleep 3  # Give time for it to set up.
 
-    # Restore ALSA settings if the backup file exists.
-    if [ -f ~/.config/asound.state ]; then
-        alsactl --file ~/.config/asound.state restore
-    fi
-}  # End of add_mic_pulseaudio()
+    # Set the Broo source as default source / mic.
+    pactl set-default-source Broo
+
+    printf 'Done! Use "Broo" or "Monitor of Shru" as your input mic, and '
+    echo -e "enjoy!\n"
+}  # End of add_mic()
 
 
-remove_mic_pulseaudio() {
-    # Unloads the PulseAudio sink, and deletes the index file.
+remove_mic() {
+    # Unloads the PulseAudio-styled Broo source, and deletes the index file.
 
     echo -n "."
-    pactl unload-module $(<"$VAR_RUN/pa_sink.index")
-    rm "$VAR_RUN/pa_sink.index"
-}  # End of remove_mic_pulseaudio()
+    pactl unload-module $(<"$VAR_RUN/pa_source.index")
+    rm "$VAR_RUN/pa_source.index"
+}  # End of remove_mic()
 
 
 check_if_started() {
@@ -204,15 +250,8 @@ start_broo() {
 
     start_mumble_server
     start_mumble_client
-
-    # Check if PipeWire used ("PipeWire" will be a substring in output).
-    if [[ $(pactl info | grep "^Server Name") =~ "PipeWire" ]]; then
-        add_mic_pipewire
-    else
-        add_mic_pulseaudio
-    fi
-
-    configure_sink
+    add_sink
+    add_mic
 
     server_ip=$(ip -4 a | grep "state UP" -A1 |
                 awk 'NR!=1 {print $2}' | cut -d '/' -f1)
@@ -271,14 +310,10 @@ stop_broo() {
         return 1
     fi
 
-    echo -n "Terminating Broo"
+    echo -n "Terminating Broo..."
 
-    if [[ $(pactl info | grep "^Server Name") =~ "PipeWire" ]]; then
-        remove_mic_pipewire
-    else
-        remove_mic_pulseaudio
-    fi
-
+    remove_mic
+    remove_sink
     stop_mumble_client
     stop_mumble_server
 
