@@ -156,17 +156,24 @@ install_dependencies() {
                         -DBUILD_NUMBER=0 \
                         -DRELEASE_ID=$release_id \
                         -DCMAKE_UNITY_BUILD=ON \
-                        -Dalsa=OFF \
-                        -Dcrash-report=OFF \
                         -Doptimize=ON \
                         -Dpackaging=ON \
+                        -Dlto=ON \
+                        -Dpipewire=ON \
+                        -Dpulseaudio=ON \
+                        -Dalsa=OFF \
+                        -Dcoreaudio=OFF \
+                        -Djackaudio=OFF \
+                        -Doss=OFF \
+                        -Dportaudio=OFF \
                         -Dplugins=OFF \
-                        -Dqtspeech=ON \
+                        -Doverlay=OFF \
+                        -Doverlay-xcompile=OFF \
+                        -Dcrash-report=OFF \
                         -Dtranslations=OFF \
                         -Dwasapi=OFF \
                         -Dxboxinput=OFF \
-                        -Doverlay=OFF \
-                        -Doverlay-xcompile=OFF \
+                        -Dgkey=OFF \
                         ..
 
                     # Normally, we will have make WITHOUT install and have
