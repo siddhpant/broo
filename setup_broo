@@ -460,7 +460,7 @@ echo -e "
     - Set the 'Input Sample Rate' to its highest value.
     - Set 'Input Quality' to its highest value.
     - Set 'Audio per packet' to 10ms or 20ms (whichever results in higher
-    quality when transmitting voice; use 10ms if both have same quality).
+      quality when transmitting voice; use 10ms if both have same quality).
 " | awk '{$1=$1};1'
 
 echo -e "We are done! Start Broo with the 'broo' command anytime!"
