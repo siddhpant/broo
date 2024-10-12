@@ -120,7 +120,6 @@ install_dependencies() {
                         libavahi-compat-libdnssd-dev \
                         libzeroc-ice-dev \
                         libpoco-dev \
-                        g++-multilib \
                         avahi-daemon \
                         iproute2
 
@@ -166,6 +165,8 @@ install_dependencies() {
                         -Dtranslations=OFF \
                         -Dwasapi=OFF \
                         -Dxboxinput=OFF \
+                        -Doverlay=OFF \
+                        -Doverlay-xcompile=OFF \
                         ..
 
                     # Normally, we will have make WITHOUT install and have
