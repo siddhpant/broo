@@ -99,10 +99,12 @@ install_dependencies() {
                         cmake \
                         checkinstall \
                         pkg-config \
-                        libqt5texttospeech5-dev \
-                        qttools5-dev \
-                        qttools5-dev-tools \
-                        libqt5svg5-dev \
+                        qt6-base-dev \
+                        qtchooser \
+                        qt6-base-dev-tools \
+                        qt6-tools-dev \
+                        qt6-tools-dev-tools \
+                        libqt6svg6-dev \
                         libboost-dev \
                         libssl-dev \
                         libprotobuf-dev \
