@@ -204,7 +204,9 @@ install_dependencies() {
                     sudo systemctl disable mumble-server || true
 
                     cd /tmp
-                    rm -rf mumble_broo
+
+                    # Need sudo due to checkinstall sudo.
+                    sudo rm -rf mumble_broo
                 )
 
                 echo -e "\nDone!"
