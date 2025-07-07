@@ -253,8 +253,8 @@ start_broo() {
     add_sink
     add_mic
 
-    server_ip=$(ip -4 a | grep "state UP" -A1 |
-                awk 'NR!=1 {print $2}' | cut -d '/' -f1)
+    server_ip=$(ip -json route get 1 \
+                | grep -Po '(?<="prefsrc":").*?[^\\](?=",)')
 
     echo "Connect to Broo's server on $server_ip :)"
 }  # End of start_broo()
