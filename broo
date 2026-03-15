@@ -73,7 +73,7 @@ start_mumble_client () {
     if [[ -f "$BROO_CFG_LOC/no_offscreen" ]]; then
         nohup mumble "mumble://127.0.0.1" \ &>"$VAR_RUN/mumble_client.out" &
     else
-        nohup mumble "mumble://127.0.0.1" -platform offscreen \
+        nohup mumble "mumble://broo@127.0.0.1" -platform offscreen \
             &>"$VAR_RUN/mumble_client.out" &
     fi
 
