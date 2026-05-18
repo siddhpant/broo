@@ -33,7 +33,8 @@ export LC_ALL=C.UTF-8
 VAR_RUN="/var/run/user/$UID/broo"
 
 # Folder which stores broo config.
-BROO_CFG_LOC="$HOME/.config/broo"
+: "${XDG_CONFIG_HOME:=$HOME/.config}"
+BROO_CFG_LOC="$XDG_CONFIG_HOME/broo"
 
 start_mumble_server() {
     # Starts the Mumble server.
@@ -132,8 +133,9 @@ add_sink_pulseaudio() {
     sleep 3  # Give time for it to set up.
 
     # Restore ALSA settings if the backup file exists.
-    if [ -f ~/.config/asound.state ]; then
-        alsactl --file ~/.config/asound.state restore
+    local alsa_state_file="$XDG_CONFIG_HOME/asound.state"
+    if [ -f "$alsa_state_file" ]; then
+        alsactl --file "$alsa_state_file" restore
     fi
 }  # End of add_sink_pulseaudio()
 
