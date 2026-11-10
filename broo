@@ -99,11 +99,30 @@ start_mumble_client () {
     # We prefer offscreen, but there can be a rare case that using offscreen
     # can cause mumble to not connect to server, so we test during setup.
     # A file "no_offscreen" is created if we don't want to do offscreen.
+
+    # broo never answers murmur's password prompt, so murmur's join password
+    # has to travel in the URL.
+    #
+    # It's not perfect:
+    # - the password lands in the process list, but well, we are local here
+    # - other than letters and digits needs URL-encoding to survive
+
+    local pass url
+    pass=$(sed -n 's/^serverpassword=//p' "$BROO_CFG_LOC/murmur.ini" | head -n 1 | tr -d '"')
+
     if [[ -f "$BROO_CFG_LOC/no_offscreen" ]]; then
-        nohup mumble "mumble://127.0.0.1" \
+        url="mumble://127.0.0.1"
+        if [[ -n "$pass" ]]; then
+            url="mumble://broo:${pass}@127.0.0.1"
+        fi
+        nohup mumble "$url" \
             &>"$VAR_RUN/mumble_client.out" &
     else
-        nohup mumble "mumble://broo@127.0.0.1" -platform offscreen \
+        url="mumble://broo@127.0.0.1"
+        if [[ -n "$pass" ]]; then
+            url="mumble://broo:${pass}@127.0.0.1"
+        fi
+        nohup mumble "$url" -platform offscreen \
             &>"$VAR_RUN/mumble_client.out" &
     fi
 
