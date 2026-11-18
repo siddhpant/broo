@@ -337,7 +337,7 @@ set_up_mumble() {
         database=$XDG_DATA_HOME/broo/murmur.sqlite
         logfile=\"$logfile\"
         logdays=-1  ; Don't store logs in the database.
-        password=\"$pass\"
+        serverpassword=\"$pass\"
         welcometext=\"\"  ; Why even welcome ourselves? :-P
     " | awk '{$1=$1};1' > $murmur_config_path
 
