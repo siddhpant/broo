@@ -90,6 +90,30 @@ stop_mumble_server() {
 }  # End of stop_mumble_server()
 
 
+urlencode() {
+    # Percent-encodes everything other than URL's unreserved characters,
+    # so that the password can safely go into the mumble:// URL. Pure bash,
+    # since we don't want to pull in jq just for this.
+
+    local string="$1" encoded="" char
+    local i
+
+    # Work on bytes, so that UTF-8 characters get encoded correctly.
+    # (The function always runs inside a command substitution.)
+    local LC_ALL=C
+
+    for (( i = 0; i < ${#string}; i++ )); do
+        char="${string:i:1}"
+        case "$char" in
+            [a-zA-Z0-9._~-]) encoded+="$char" ;;
+            *) printf -v encoded '%s%%%02X' "$encoded" "'$char" ;;
+        esac
+    done
+
+    echo "$encoded"
+}  # End of urlencode()
+
+
 start_mumble_client () {
     # Starts the Mumble client (with logs for monitoring), stores its PID,
     # and waits till the connection to server is established.
@@ -99,11 +123,26 @@ start_mumble_client () {
     # We prefer offscreen, but there can be a rare case that using offscreen
     # can cause mumble to not connect to server, so we test during setup.
     # A file "no_offscreen" is created if we don't want to do offscreen.
+
+    # broo never answers murmur's password prompt, so murmur's join password,
+    # if set, has to travel in the URL (percent-encoded to survive).
+    #
+    # It's not perfect: the password lands in the process list, but well,
+    # we are local here.
+
+    local pass url="mumble://broo"
+    pass=$(sed -n 's/^serverpassword=//p' "$BROO_CFG_LOC/murmur.ini" | head -n 1 | tr -d '"')
+
+    if [[ -n "$pass" ]]; then
+        url+=":$(urlencode "$pass")"
+    fi
+    url+="@127.0.0.1"
+
     if [[ -f "$BROO_CFG_LOC/no_offscreen" ]]; then
-        nohup mumble "mumble://127.0.0.1" \
+        nohup mumble "$url" \
             &>"$VAR_RUN/mumble_client.out" &
     else
-        nohup mumble "mumble://broo@127.0.0.1" -platform offscreen \
+        nohup mumble "$url" -platform offscreen \
             &>"$VAR_RUN/mumble_client.out" &
     fi
 
