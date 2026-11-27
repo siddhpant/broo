@@ -292,7 +292,7 @@ set_up_mumble() {
     mkdir "$XDG_CONFIG_HOME/broo" "$XDG_DATA_HOME/broo"
 
     # Set password for new / unregistered connections.
-    pass="a"
+    pass=""
     pass_confirm="b"
     echo
     read -n1 -p "Do you want to set password for new connections? (y/n): " yn
@@ -300,8 +300,9 @@ set_up_mumble() {
     case $yn in
         y|Y)
             while [[ "$pass" != "$pass_confirm" ]]; do
-                printf "Note: Password is saved **unencrypted**, and should "
-                echo "not contain double quotes (\")."
+                printf "Note: Password is saved **unencrypted** and is shown "
+                printf "on process list, and it should not contain double "
+                echo "quotes (\")."
                 read -sp "Enter password: " pass; echo
                 read -sp "Enter password again: " pass_confirm; echo
                 if [[ "$pass" != "$pass_confirm" ]]; then
