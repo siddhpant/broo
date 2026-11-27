@@ -119,7 +119,8 @@ start_mumble_client () {
     # we are local here.
 
     local pass url="mumble://broo"
-    pass=$(sed -n 's/^serverpassword=//p' "$BROO_CFG_LOC/murmur.ini" | head -n 1 | tr -d '"')
+    pass=$(sed -n 's/^serverpassword=//p' "$BROO_CFG_LOC/murmur.ini"
+            | head -n 1 | tr -d '"')
 
     if [[ -n "$pass" ]]; then
         url+=":$(urlencode "$pass")"
