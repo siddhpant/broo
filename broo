@@ -91,26 +91,14 @@ stop_mumble_server() {
 
 
 urlencode() {
-    # Percent-encodes everything other than URL's unreserved characters,
-    # so that the password can safely go into the mumble:// URL. Pure bash,
-    # since we don't want to pull in jq just for this.
+    # Percent-encodes everything, so that the password can safely go into the
+    # mumble:// URL. Pure bash for no dependency. We work on bytes by setting
+    # LC_ALL=C, so that UTF-8 characters get encoded correctly.
+    local LC_ALL=C string="$1" len_string=${#1} i=0
 
-    local string="$1" encoded="" char
-    local i
-
-    # Work on bytes, so that UTF-8 characters get encoded correctly.
-    # (The function always runs inside a command substitution.)
-    local LC_ALL=C
-
-    for (( i = 0; i < ${#string}; i++ )); do
-        char="${string:i:1}"
-        case "$char" in
-            [a-zA-Z0-9._~-]) encoded+="$char" ;;
-            *) printf -v encoded '%s%%%02X' "$encoded" "'$char" ;;
-        esac
+    for (( i = 0; i < $len_string; i++ )); do
+        printf '%%%02X' "'${string:i:1}";
     done
-
-    echo "$encoded"
 }  # End of urlencode()
 
 
