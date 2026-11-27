@@ -456,7 +456,14 @@ echo -e "Setting up Broo...\n"
 
 install_dependencies
 check_mumble
-set_up_mumble
+
+arg=${1:-}
+if [[ "$arg" == "--update" ]] || [[ "$arg" == "--skip-mumble-setup" ]]; then
+    echo -e "\nSkipping Mumble setup due to $arg.\n"
+else
+    set_up_mumble
+fi
+
 copy_broo
 test_broo
 

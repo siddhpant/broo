@@ -39,11 +39,21 @@ If you want, you may build Mumble and its server directly from the [source](http
 ```
 $ git clone https://github.com/siddhpant/broo.git
 $ cd broo
-$ chmod +x broo setup_broo
 $ ./setup_broo
 ```
 
 Then follow the on-screen instructions.
+
+## Update
+
+When you want to update broo or skip the mumble setup, pass `--update` or `--skip-mumble-setup` to `setup_broo`.
+
+```
+$ cd broo
+$ git switch main
+$ git pull
+$ ./setup_broo --update
+```
 
 ## Run
 
